@@ -106,6 +106,10 @@ class ProcessSimulator:
             raise SimulationInputError("steps must be a non-negative integer")
 
         self.reset(seed)
+        for fault in faults:
+            reset_runtime = getattr(fault, "reset_runtime", None)
+            if reset_runtime is not None:
+                reset_runtime()
         observations: list[ProcessObservation] = []
         for step_index in range(steps):
             action: ManipulatedVariables | dict[str, Any] = self.config.default_action
@@ -113,7 +117,12 @@ class ProcessSimulator:
                 modifier = getattr(fault, "modify_action", None)
                 if modifier is not None:
                     action = modifier(step_index, action)
-            observations.append(self.step(action))
+            observation = self.step(action)
+            for fault in faults:
+                modifier = getattr(fault, "modify_observation", None)
+                if modifier is not None:
+                    observation = modifier(observation)
+            observations.append(observation)
         return observations
 
     def _measure(self, value: float) -> float:

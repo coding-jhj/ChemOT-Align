@@ -4,13 +4,13 @@
 
 ChemOT-Align is an offline research platform for building and evaluating an LLM that analyzes chemical-process and IT/OT security incidents from auditable evidence.
 
-It connects three concerns in one reproducible workflow:
+The platform connects three concerns in one reproducible workflow:
 
 - chemical-process dynamics, operating bounds, alarms, and safety reasoning;
-- network, Linux, web/DB, IDS, and provenance-aware security evidence;
-- SFT, preference optimization, Secure RAG, and adversarial evaluation.
+- provenance-aware network, Linux, web/DB, and IDS evidence;
+- baseline, post-training, Secure RAG, and adversarial evaluation.
 
-The product boundary is deliberately clear: ChemOT-Align is an analysis and research system, not a plant controller, network operator, or autonomous security agent.
+ChemOT-Align is an analysis and research service. It is not a plant controller, network operator, autonomous security agent, or industrial safety certification.
 
 ## What is available now
 
@@ -20,22 +20,26 @@ The product boundary is deliberately clear: ChemOT-Align is an analysis and rese
 | Typed evidence, incident, and model-output contracts | Ready | `src/chemot_align/schemas/` |
 | Provenance records and sensitive-text redaction | Ready | `src/chemot_align/provenance/`, `src/chemot_align/safety/` |
 | Deterministic bounded CSTR simulator | Ready | `src/chemot_align/process_sim/` |
+| Bounded fault injection | Ready | `src/chemot_align/process_sim/faults.py` |
+| Scenario generation, process evidence, and ground truth | Ready | `src/chemot_align/scenario_engine/` |
 | ALEPH-scoped Lab adapters | Planned | Task 5 |
+| Leakage-safe evidence normalization and splits | Planned | Task 6 |
 | Secure local RAG | Planned | Task 7 |
-| Baseline model and evaluation harness | Planned | Tasks 8–9 |
-| SFT, preference optimization, Reward/RLAIF | Planned | Tasks 10–12 |
+| Baseline model and evaluation harness | Planned | Tasks 8-9 |
+| SFT, preference optimization, Reward/RLAIF | Planned | Tasks 10-12 |
 | Offline incident-analysis demo | Planned | Task 15 |
 
-## How the platform works
+## How the service works
 
 ```text
-Process simulator ─┐
-                   ├─> typed evidence ─> incident case ─> analysis ─> evaluation report
-Security Lab ──────┘             │              │                 │
-                                 └─ provenance ──┴─ read-only boundary
+process config -> CSTR simulator -> bounded faults -> scenario generator
+                                               -> evidence + ground truth
+                                               -> IncidentCase + provenance
+
+future Lab fixtures ---------------------------> normalized IncidentCase
 ```
 
-Packet Tracer, VirtualBox, and the Python simulator remain separate producers. They are connected through normalized evidence rather than an assumed real-time bridge.
+The process simulator, future Packet Tracer fixtures, and future VirtualBox Lab adapters remain separate producers. Their integration point is a validated, provenance-labeled evidence contract rather than an assumed real-time bridge.
 
 ## Safety boundary
 
@@ -47,17 +51,17 @@ ChemOT-Align does not:
 - generate chemical synthesis instructions or hazardous operating procedures;
 - treat a failed, empty, stale, or conflicted observation as normal evidence.
 
-Security experiments are limited to an owned or explicitly authorized isolated Lab. The initial tool policy is read-only, and public artifacts must pass provenance and secret checks.
+Synthetic faults are limited to named, bounded fault families. Scenario files cannot execute shell commands, open URLs, or inject unbounded numeric values. Security experiments are limited to an owned or explicitly authorized isolated Lab, and the initial tool policy is read-only.
 
 ## Quickstart
 
-The repository targets Python 3.12.x. The current development environment uses a local `.venv` and keeps it out of Git.
+The repository targets Python 3.12.x. The current development environment uses a local `.venv`, which is ignored by Git.
 
 ### Verify the environment
 
 ```powershell
-\.venv\Scripts\python.exe -m pytest -q
-\.venv\Scripts\ruff.exe check src tests
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\ruff.exe check src tests
 ```
 
 ### Run the project healthcheck
@@ -77,6 +81,26 @@ $env:PYTHONPATH = "src"
 ```
 
 The simulator is deterministic for a fixed seed, rejects invalid controls instead of silently clamping them, and emits safety violations with synthetic provenance.
+
+### Generate a reproducible process incident case
+
+```powershell
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -c "from pathlib import Path; from chemot_align.scenario_engine import ScenarioGenerator, ScenarioSpec; c=ScenarioGenerator().generate(ScenarioSpec.from_yaml(Path('scenarios/process/cooling_loss.yaml')), seed=42); print(c.case_id, c.ground_truth.incident_class.value, len(c.evidence), c.provenance.source_hash)"
+```
+
+This generates a schema-valid `IncidentCase` with a deterministic case ID, synthetic process evidence, fault-derived ground truth, the seed, and the scenario-file SHA-256.
+
+## Scenario catalog
+
+| Scenario | Purpose | Expected class |
+| --- | --- | --- |
+| `normal_cstr.yaml` | Stable baseline operation | `normal` |
+| `sensor_drift.yaml` | Measurement drift without changing true state | `sensor_fault` |
+| `valve_delay.yaml` | Delayed manipulated-valve response | `process_fault` |
+| `cooling_loss.yaml` | Reduced cooling capacity | `process_fault` |
+
+Every scenario uses the same bounded CSTR configuration, declares its fault window and target asset, and records the source hash in the generated case provenance.
 
 ## Research workflow
 
@@ -106,13 +130,14 @@ Every experiment must preserve the model identity, dataset and split hashes, see
 
 ```text
 configs/                 versioned project and process configuration
+scenarios/process/       bounded normal and fault scenario definitions
 docs/                    specification, threat model, cards, and reports
 src/chemot_align/
   schemas/               typed evidence and incident contracts
   provenance/            execution and source traceability
   safety/                redaction and safety boundaries
-  process_sim/           bounded chemical-process simulation
-scenarios/               future process and Lab scenario definitions
+  process_sim/           bounded chemical-process simulation and faults
+  scenario_engine/       scenario loading, generation, and ground truth
 data/                    raw/interim/private and processed/public data roots
 tests/                   focused unit and integration tests
 ```
@@ -123,11 +148,19 @@ Raw Lab output, checkpoints, credentials, and private generated data must remain
 
 The project is being built as vertical slices. A later stage may add a feature only after its focused tests and provenance contract are in place. A model failure, parser failure, CUDA OOM, unavailable Lab, or non-computable metric remains a recorded failure rather than a fabricated success.
 
+Current verified local slice:
+
+- Task 1: project contract, environment checks, and package bootstrap;
+- Task 2: evidence/incident contracts, provenance, and redaction safeguards;
+- Task 3: deterministic bounded CSTR simulation and safety checks;
+- Task 4: bounded faults, process scenarios, synthetic evidence, and ground truth.
+
 ## Documentation
 
 - [Approved project specification](docs/superpowers/specs/2026-09-20-chemot-align-design.md)
 - [Project configuration](configs/project.yaml)
 - [CSTR baseline configuration](configs/process/cstr_baseline.yaml)
+- [Process scenario catalog](scenarios/process/)
 - [SHA-256 source manifest](docs/superpowers/specs/SHA256SUMS)
 
 ## License and provenance

@@ -1,0 +1,19 @@
+name: chemot-align
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12.3
+  - pip
+  - "pydantic>=2,<3"
+  - "pyyaml>=6,<7"
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - pytest
+  - ruff
+  - pip:
+      - -e .[dev,research]
+
+# PyTorch/CUDA is intentionally selected after the local healthcheck because
+# the correct wheel depends on the host GPU, driver, and platform.

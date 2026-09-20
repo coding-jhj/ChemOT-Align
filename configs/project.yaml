@@ -1,0 +1,19 @@
+project_name: ChemOT-Align
+schema_version: "0.1"
+tool_mode: read_only
+python_version: "3.12.3"
+
+data_root: ../data
+raw_root: ../data/raw
+interim_root: ../data/interim
+processed_root: ../data/processed
+quarantine_root: ../data/quarantine
+manifest_root: ../data/manifests
+
+evidence_statuses:
+  - executed
+  - official_checked
+  - synthetic
+  - inferred
+  - unverified
+  - redacted

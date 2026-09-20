@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chemot-align"
+version = "0.1.0"
+description = "Chemical Process OT Security Post-Training Research Platform"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { file = "LICENSE" }
+authors = [{ name = "ChemOT-Align contributors" }]
+dependencies = [
+    "pydantic>=2.7,<3",
+    "PyYAML>=6,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+    "ruff>=0.9,<1",
+]
+research = [
+    "numpy>=2,<3",
+    "scipy>=1.13,<2",
+    "pandas>=2.2,<3",
+    "scikit-learn>=1.5,<2",
+    "transformers>=4.48,<5",
+    "datasets>=3.2,<4",
+    "peft>=0.14,<1",
+    "trl>=0.15,<1",
+    "accelerate>=1.2,<2",
+]
+
+[project.scripts]
+chemot-align = "chemot_align.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

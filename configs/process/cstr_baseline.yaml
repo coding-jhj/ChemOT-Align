@@ -1,0 +1,45 @@
+name: cstr_baseline
+dt: 1.0
+volume: 100.0
+density: 1000.0
+heat_capacity: 4.18
+reaction_heat: 25.0
+rate_constant_reference: 0.02
+reference_temperature: 330.0
+activation_energy: 2500.0
+gas_constant: 8.314
+max_rate_constant: 0.25
+feed_concentration: 1.0
+feed_temperature: 320.0
+nominal_outflow: 1.0
+coolant_heat_transfer: 4000.0
+pressure_relaxation: 0.04
+pressure_flow_gain: 0.05
+measurement_noise_std: 0.001
+max_feed_flow: 2.0
+max_coolant_flow: 2.0
+initial_temperature: 310.0
+initial_pressure: 1.0
+initial_flow: 1.0
+initial_concentration: 0.8
+initial_level: 0.5
+initial_pump_on: true
+initial_valve_opening: 1.0
+
+default_action:
+  feed_flow: 1.0
+  coolant_flow: 0.5
+  valve_opening: 1.0
+  pump_on: true
+
+bounds:
+  temperature_min: 250.0
+  temperature_max: 450.0
+  pressure_min: 0.0
+  pressure_max: 10.0
+  flow_min: 0.0
+  flow_max: 2.0
+  concentration_min: 0.0
+  concentration_max: 2.0
+  level_min: 0.0
+  level_max: 1.0
